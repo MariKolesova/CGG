@@ -1,0 +1,1240 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Quadrat</title>
+    </head>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+        }
+
+        canvas {
+            background-color: #ffb6c1b9;
+            image-rendering: optimizeSpeed;
+        }
+
+        input[type='button'] {
+            padding: 15px 20px;
+            margin: 20px;
+            cursor: pointer;
+        }
+    </style>
+    <body>
+        <canvas id="canvas" width="1500" height="1200"></canvas>
+        <div>
+            <input
+                type="button"
+                onclick="houseBuildTop()"
+                value="домик вверх"
+            />
+            <input type="button" onclick="houseBuildBot()" value="домик вниз" />
+            <input
+                type="button"
+                onclick="houseBuildLeft()"
+                value="домик влево"
+            />
+            <input
+                type="button"
+                onclick="houseBuildRight()"
+                value="домик вправо"
+            />
+            <input
+                type="button"
+                onclick="buildTriangleRectangle()"
+                value="рандомный треугольник"
+            />
+            <input
+                type="button"
+                onclick="createRandomPolygon()"
+                value="рандомный многоугольник"
+            />
+        </div>
+    </body>
+    <script type="text/javascript">
+        /**
+         * В произвольный выпуклый многоугольник вписать максимальный квадрат
+         */
+        const canvasList = document.getElementById('canvas');
+        /** Метод рисования ниже !*/
+        //  canvasList.addEventListener('click', (event) => {
+        //      event.preventDefault();
+        //      drawFigure(event);
+        //  });
+        /** Метод рисования выше !*/
+        let startX = -1;
+        let startY = -1;
+        let _coordinates = [];
+        let _figureModel = [];
+        let areasOfRectangle = {};
+        let _quadrats = [];
+        let _segmentsLenght = [];
+        let controlPoint = [];
+        let secondControlPoint = [];
+        let globalCorrectPoint = [];
+        let neighborsCoordinates = [];
+        let neighborsSegment = {};
+        let randomPolygonFigure = [
+            [
+                [704.0763768544739, 430.88604759288216],
+                [497.6022675535519, 470.9349050003886],
+                [457.3654094256908, 263.4915475411939],
+                [664.3529175406592, 226.0895462416598],
+            ],
+            [
+                [472, 439],
+                [589, 195],
+                [860, 243],
+                [1006, 505],
+                [1019, 772],
+            ],
+            [
+                [430, 461],
+                [428, 361],
+                [500, 297],
+                [671, 288],
+                [737, 342],
+                [745, 441],
+                [692, 526],
+                [567, 539],
+            ],
+            [
+                [287, 483],
+                [289, 388],
+                [490, 348],
+                [557, 577],
+                [475, 697],
+                [336, 684],
+            ],
+            [
+                [163, 400],
+                [205, 300],
+                [398, 274],
+                [547, 292],
+                [681, 343],
+                [749, 444],
+                [731, 532],
+            ],
+            [
+                [291, 516],
+                [304, 285],
+                [396, 231],
+                [561, 299],
+                [627, 448],
+                [614, 607],
+                [446, 658],
+            ],
+            [
+                [228, 392],
+                [233, 260],
+                [632, 599],
+                [594, 673],
+            ],
+            [
+                [262, 532],
+                [247, 401],
+                [321, 337],
+                [388, 357],
+                [464, 434],
+                [498, 539],
+                [471, 620],
+                [388, 639],
+            ],
+            [
+                [193, 403],
+                [177, 330],
+                [207, 261],
+                [296, 229],
+                [362, 230],
+                [479, 243],
+                [591, 299],
+                [628, 369],
+                [622, 462],
+                [529, 512],
+                [403, 519],
+            ],
+            [
+                [307, 416],
+                [307, 324],
+                [392, 288],
+                [484, 288],
+                [569, 324],
+                [569, 416],
+                [480, 460],
+                [388, 460],
+            ],
+        ];
+
+        let randomTriangleFigure = [
+            [
+                [373, 405],
+                [555, 194],
+                [844, 480],
+            ],
+            [
+                [456, 382],
+                [462, 246],
+                [686, 516],
+            ],
+            [
+                [464, 470],
+                [498, 200],
+                [875, 231],
+            ],
+            [
+                [433, 454],
+                [436, 194],
+                [962, 319],
+            ],
+            [
+                [400, 446],
+                [191, 742],
+                [670, 765],
+            ],
+            [
+                [535, 288],
+                [798, 208],
+                [897, 797],
+            ],
+            [
+                [595, 480],
+                [825, 389],
+                [639, 486],
+            ],
+            [
+                [340, 591],
+                [380, 332],
+                [624, 440],
+            ],
+        ];
+        let polygonIndex = 0;
+        let triangleIndex = 0;
+
+        function createEightAngle() {
+            findSquadInPolygon([
+                [373, 405],
+                [555, 194],
+                [844, 480],
+            ]);
+        }
+
+        function createRandomPolygon() {
+            findSquadInPolygon(randomPolygonFigure[polygonIndex]);
+            polygonIndex++;
+            if (polygonIndex === randomPolygonFigure.length) {
+                polygonIndex = 0;
+            }
+        }
+
+        function houseBuildTop() {
+            findSquadInPolygon([
+                [341, 459],
+                [341, 290],
+                [442, 195],
+                [510, 290],
+                [510, 459],
+            ]);
+        }
+
+        function houseBuildBot() {
+            findSquadInPolygon([
+                [341, 459],
+                [341, 290],
+                [510, 290],
+                [510, 459],
+                [403, 571],
+            ]);
+        }
+
+        function houseBuildLeft() {
+            findSquadInPolygon([
+                [341, 459],
+                [193, 391],
+                [341, 290],
+                [510, 290],
+                [510, 459],
+            ]);
+        }
+
+        function houseBuildRight() {
+            findSquadInPolygon([
+                [341, 459],
+                [341, 290],
+                [510, 290],
+                [728, 408],
+                [510, 459],
+            ]);
+        }
+
+        function buildTriangleRectangle() {
+            findSquadInPolygon(randomTriangleFigure[triangleIndex]);
+            triangleIndex++;
+            if (triangleIndex === randomTriangleFigure.length) {
+                triangleIndex = 0;
+            }
+        }
+
+        function findSquadInPolygon(testFigure = []) {
+            const context = document.getElementById('canvas');
+            const canvas = context.getContext('2d');
+
+            if (testFigure.length) {
+                _coordinates = [];
+                _figureModel = [];
+                areasOfRectangle = [];
+                _quadrats = [];
+                _segmentsLenght = [];
+                canvas.clearRect(0, 0, context.width, context.height);
+                _coordinates = testFigure;
+                drawAllLine(testFigure, '#9308f0de', 3);
+            }
+            createFigureModel();
+            if (_figureModel.length === 4) {
+                const distanceCurrentFigure = Math.round(
+                    getDistancePoint(
+                        [_figureModel[0].startX, _figureModel[0].startY],
+                        [_figureModel[0].endX, _figureModel[0].endY],
+                    ),
+                );
+                const isCurrentFigureQuad = checkAllDistance(
+                    _coordinates,
+                    distanceCurrentFigure,
+                );
+                if (isCurrentFigureQuad) {
+                    _quadrats.push({
+                        points: _coordinates,
+                        area: distanceCurrentFigure * distanceCurrentFigure,
+                    });
+                    drawAllLine(_coordinates);
+                    return;
+                }
+            }
+            for (let i = 0; i < _coordinates.length; i++) {
+                neighborsCoordinates = [];
+                controlPoint = [];
+                secondControlPoint = [];
+                globalCorrectPoint = [];
+                neighborsSegment = {};
+                const currentOppositePoint = _coordinates[i];
+                setNeighborsCoordinates(i);
+                setNeighborsSegment(currentOppositePoint);
+                const distanceNeighbors = Math.round(
+                    getDistancePoint(
+                        neighborsCoordinates[0],
+                        neighborsCoordinates[1],
+                    ),
+                );
+                const segmentNeighbors = {
+                    startX: neighborsSegment.first.startX,
+                    startY: neighborsSegment.first.startY,
+                    endX: neighborsSegment.second.endX,
+                    endY: neighborsSegment.second.endY,
+                    segmentLength: distanceNeighbors,
+                };
+
+                getLineEquation(
+                    segmentNeighbors,
+                    [segmentNeighbors.endX, segmentNeighbors.endY],
+                    currentOppositePoint,
+                );
+                getLineEquation(
+                    segmentNeighbors,
+                    [segmentNeighbors.startX, segmentNeighbors.startY],
+                    currentOppositePoint,
+                );
+                if (controlPoint.length > 2) {
+                    controlPoint = [
+                        controlPoint[0],
+                        controlPoint[Math.round(controlPoint.length / 2)],
+                    ];
+                }
+                if (controlPoint.length !== 2) {
+                    continue;
+                }
+                const distance = Math.round(
+                    getDistancePoint(
+                        controlPoint[0].goodPoint,
+                        controlPoint[1].goodPoint,
+                    ),
+                );
+                const newQuadratSegment = {
+                    startX: controlPoint[0].goodPoint[0],
+                    startY: controlPoint[0].goodPoint[1],
+                    endX: controlPoint[1].goodPoint[0],
+                    endY: controlPoint[1].goodPoint[1],
+                    segmentLength: distance,
+                };
+                getLineEquation(
+                    newQuadratSegment,
+                    controlPoint[1].goodPoint,
+                    null,
+                    distance,
+                    controlPoint[1].segment,
+                );
+                getLineEquation(
+                    newQuadratSegment,
+                    controlPoint[0].goodPoint,
+                    null,
+                    distance,
+                    controlPoint[0].segment,
+                );
+                const finalPoints = [
+                    controlPoint[0].goodPoint,
+                    controlPoint[1].goodPoint,
+                    ...secondControlPoint,
+                ].filter((el) => el.length);
+                const isQuadrat = checkAllDistance(finalPoints, distance);
+                if (isQuadrat) {
+                    _quadrats.push({
+                        points: finalPoints,
+                        area: distance * distance,
+                    });
+                }
+            }
+            console.log(_quadrats);
+            const biggestQuadrat = _quadrats.sort((a, b) => b.area - a.area)[0];
+            if (!biggestQuadrat) {
+                console.log('Не нашли первым способом');
+            } else {
+                console.log(_coordinates);
+                drawAllLine(biggestQuadrat.points);
+            }
+        }
+
+        /**
+         * Основной метод рисования фигуры и последующих вычислений
+         */
+        function drawFigure(event) {
+            const context = document.getElementById('canvas');
+            const canvas = context.getContext('2d');
+            if (!isFigureFineshed(event)) {
+                drawCoordinate(event, canvas);
+                _coordinates.push([event.clientX, event.clientY]);
+                if (startY < 0 && startX < 0) {
+                    startX = event.clientX;
+                    startY = event.clientY;
+                }
+                return;
+            }
+            drawEnd(event, canvas);
+            checkBadPolygon(canvas);
+            findSquadInPolygon();
+        }
+
+        function checkAllDistance(finalPoints, distance) {
+            let currentDistance = 0;
+            let equalCount = 0;
+            for (let i = 0; i < finalPoints.length; i++) {
+                if (i === 0) {
+                    currentDistance = getDistancePoint(
+                        finalPoints[finalPoints.length - 1],
+                        finalPoints[i],
+                    );
+                } else if (i === finalPoints.length - 1) {
+                    currentDistance = getDistancePoint(
+                        finalPoints[i],
+                        finalPoints[0],
+                    );
+                } else {
+                    currentDistance = getDistancePoint(
+                        finalPoints[i],
+                        finalPoints[i + 1],
+                    );
+                }
+                console.log(Math.round(distance), Math.round(currentDistance));
+                if (
+                    Math.round(distance) === Math.round(currentDistance) ||
+                    Math.abs(
+                        Math.round(distance) - Math.round(currentDistance),
+                    ) <= 7
+                ) {
+                    equalCount++;
+                }
+            }
+            return equalCount === 4;
+        }
+
+        /**
+         * Нарисовать точку
+         */
+        function drawPoint(ordX, ordY, size = 5, text = false) {
+            const context = document.getElementById('canvas');
+            const canvas = context.getContext('2d');
+            canvas.moveTo(ordX, ordY);
+            if (text) {
+                canvas.fillText(`${ordX} ${ordY}`, ordX, ordY);
+            }
+            canvas.fillRect(ordX, ordY, size, size);
+        }
+
+        function drawAllLine(coordinate, color = '', size = 2) {
+            const context = document.getElementById('canvas');
+            const canvas = context.getContext('2d');
+
+            canvas.beginPath();
+            canvas.lineWidth = size;
+            canvas.strokeStyle = color || '#000';
+            canvas.moveTo(coordinate[0][0], coordinate[0][1]);
+            // canvas.fillText(
+            //     `${coordinate[0][0]} ${coordinate[0][1]}`,
+            //     coordinate[0][0],
+            //     coordinate[0][1],
+            // );
+            for (let i = 1; i <= coordinate.length - 1; i++) {
+                canvas.lineTo(coordinate[i][0], coordinate[i][1]);
+                // canvas.fillText(
+                //     `${coordinate[i][0]} ${coordinate[i][1]}`,
+                //     coordinate[i][0],
+                //     coordinate[i][1],
+                // );
+            }
+            canvas.lineTo(coordinate[0][0], coordinate[0][1]);
+            canvas.stroke();
+        }
+
+        function setNeighborsCoordinates(i) {
+            if (i === 0) {
+                neighborsCoordinates.push(
+                    _coordinates[_figureModel.length - 1],
+                );
+                neighborsCoordinates.push(_coordinates[i + 1]);
+            } else if (i === _coordinates.length - 1) {
+                neighborsCoordinates.push(_coordinates[i - 1]);
+                neighborsCoordinates.push(_coordinates[0]);
+            } else {
+                neighborsCoordinates.push(_coordinates[i - 1]);
+                neighborsCoordinates.push(_coordinates[i + 1]);
+            }
+        }
+
+        function setNeighborsSegment(currentOppositePoint) {
+            _figureModel.forEach((segment) => {
+                if (
+                    segment.endX === currentOppositePoint[0] &&
+                    segment.endY === currentOppositePoint[1]
+                ) {
+                    neighborsSegment.first = segment;
+                } else if (
+                    segment.startX === currentOppositePoint[0] &&
+                    segment.startY === currentOppositePoint[1]
+                ) {
+                    neighborsSegment.second = segment;
+                }
+            });
+        }
+        /**
+         * Найти точку пересечения отрезков
+         * https://profmeter.com.ua/communication/learning/course/course19/lesson194/
+         */
+        function getIntersectionSegmentCoordinates(
+            startFirst,
+            endFirst,
+            startSecond,
+            endSecond,
+        ) {
+            let x1 = startFirst[0];
+            let x2 = endFirst[0];
+            let x3 = startSecond[0];
+            let x4 = endSecond[0];
+            let y1 = startFirst[1];
+            let y2 = endFirst[1];
+            let y3 = startSecond[1];
+            let y4 = endSecond[1];
+            let k1, k2, b1, b2, x, y;
+
+            if (x1 >= x2) {
+                let gap = x1;
+                x1 = x2;
+                x2 = gap;
+                gap = y1;
+                y1 = y2;
+                y2 = gap;
+            }
+            if (x3 >= x4) {
+                let gap = x3;
+                x3 = x4;
+                x4 = gap;
+                gap = y3;
+                y3 = y4;
+                y4 = gap;
+            }
+            if (y2 === y1) {
+                k1 = 0;
+            } else {
+                k1 = (y2 - y1) / (x2 - x1);
+            }
+
+            if (y3 === y4) {
+                k2 = 0;
+            } else {
+                k2 = (y4 - y3) / (x4 - x3);
+            }
+            if (Math.round(k1) === Math.round(k2)) {
+                return [];
+            }
+
+            b1 = y1 - k1 * x1;
+            b2 = y3 - k2 * x3;
+
+            x = (b2 - b1) / (k1 - k2);
+            y = k1 * x + b1;
+            const isIntersection = checkIntersectionLine(
+                startFirst,
+                endFirst,
+                startSecond,
+                endSecond,
+            );
+
+            if (x1 - x2 == 0) {
+                x = x1;
+                const A2 = (y3 - y4) / (x3 - x4);
+                const b2 = y3 - A2 * x3;
+                y = A2 * x + b2;
+            }
+
+            if (x3 - x4 == 0) {
+                x = x3;
+                const A1 = (y1 - y2) / (x1 - x2);
+                const b1 = y1 - A1 * x1;
+                y = A1 * x + b1;
+            }
+
+            if (isIntersection) {
+                return [x, y];
+            }
+
+            return [];
+        }
+
+        /**
+         * Проверка на то, что точка на фигуре
+         */
+        function isOnLineFigure(point) {
+            return _figureModel.map((segment) => {
+                const a =
+                    (Math.round(point[0]) - segment.startX) /
+                    (segment.endX - segment.startX);
+                const b =
+                    (Math.round(point[1]) - segment.startY) /
+                    (segment.endY - segment.startY);
+                // console.log(a.toFixed(2), b.toFixed(2));
+                // console.log(Math.round(a), Math.round(b));
+                return (
+                    Math.round(a) === Math.round(b) &&
+                    Math.sign(a) === Math.sign(b)
+                );
+            });
+        }
+
+        /**
+         * Уравнение прямой y=kx+b
+         */
+        function getLineEquationClassic(segment, x) {
+            const k =
+                (segment.endY - segment.startY) /
+                (segment.endX - segment.startX);
+            const b =
+                (segment.endX * segment.startY -
+                    segment.startX * segment.endY) /
+                (segment.endX - segment.startX);
+            const y = (x) => k * x + b;
+
+            return y;
+        }
+
+        /**
+         * Уравнение прямой через точку, перпендикулярной к прямой
+         */
+        function getLineEquation(
+            segment,
+            point,
+            oppositePoint,
+            newDistance,
+            pointSegment,
+        ) {
+            let minDistance = Infinity;
+            let correctPoint = [];
+            let index = 0.5;
+            const y = (xArg) =>
+                -(
+                    1 /
+                    ((segment.endY - segment.startY) /
+                        (segment.endX - segment.startX))
+                ) *
+                    (xArg - point[0]) +
+                point[1];
+            if (newDistance) {
+                _figureModel.forEach((currentSegment) => {
+                    if (isSameSegments(pointSegment, currentSegment)) {
+                        return;
+                    }
+                    let goodPoint;
+                    if (segment.endY === segment.startY) {
+                        const isBelong1 = isPointBelongSegment(
+                            [point[0], point[1] + newDistance],
+                            currentSegment,
+                        );
+                        const isBelong2 = isPointBelongSegment(
+                            [point[0], point[1] - newDistance],
+                            currentSegment,
+                        );
+                        const isBelong3 = _segmentsLenght
+                            .map((len) => {
+                                const isOnSegment = isPointBelongSegment(
+                                    [point[0], point[1] + len],
+                                    currentSegment,
+                                );
+                                if (isOnSegment) {
+                                    return [point[0], point[1] + len];
+                                }
+                            })
+                            .filter(Boolean);
+                        const isBelong4 = _segmentsLenght
+                            .map((len) => {
+                                const isOnSegment = isPointBelongSegment(
+                                    [point[0], point[1] - len],
+                                    currentSegment,
+                                );
+                                if (isOnSegment) {
+                                    return [point[0], point[1] - len];
+                                }
+                            })
+                            .filter(Boolean);
+
+                        if (isBelong1) {
+                            goodPoint = [point[0], point[1] + newDistance];
+                        } else if (isBelong2) {
+                            goodPoint = [point[0], point[1] - newDistance];
+                        } else if (isBelong3.length) {
+                            goodPoint = isBelong3[0];
+                        } else if (isBelong4.length) {
+                            goodPoint = isBelong4[0];
+                        }
+                    } else if (segment.endX === segment.startX) {
+                        const isBelong1 = isPointBelongSegment(
+                            [point[0] + newDistance, point[1]],
+                            currentSegment,
+                        );
+                        const isBelong2 = isPointBelongSegment(
+                            [point[0] - newDistance, point[1]],
+                            currentSegment,
+                        );
+                        const isBelong3 = isPointBelongSegment(
+                            [point[0] + currentSegment.segmentLength, point[1]],
+                            currentSegment,
+                        );
+                        const isBelong4 = isPointBelongSegment(
+                            [point[0] - currentSegment.segmentLength, point[1]],
+                            currentSegment,
+                        );
+                        if (isBelong1) {
+                            goodPoint = [point[0] + newDistance, point[1]];
+                        } else if (isBelong2) {
+                            goodPoint = [point[0] - newDistance, point[1]];
+                        } else if (isBelong3) {
+                            goodPoint = [
+                                point[0] + currentSegment.segmentLength,
+                                point[1],
+                            ];
+                        } else if (isBelong4) {
+                            goodPoint = [
+                                point[0] - currentSegment.segmentLength,
+                                point[1],
+                            ];
+                        }
+                    } else {
+                        goodPoint = getIntersectionSegmentCoordinates(
+                            [currentSegment.startX, currentSegment.startY],
+                            [currentSegment.endX, currentSegment.endY],
+                            [1200, y(1200)],
+                            [0, y(0)],
+                        );
+                    }
+                    if (goodPoint && goodPoint.length) {
+                        secondControlPoint.push(goodPoint);
+                        // drawPoint(goodPoint[0], goodPoint[1], 3, true);
+                    }
+                });
+            }
+
+            if (newDistance) {
+                return;
+            }
+            if (Math.round(segment.endY - segment.startY) === 0) {
+                getGoodPoints(
+                    oppositePoint,
+                    point[0],
+                    point[1] + segment.segmentLength,
+                );
+                getGoodPoints(
+                    oppositePoint,
+                    point[0],
+                    point[1] - segment.segmentLength,
+                );
+                return;
+            }
+            if (Math.round(segment.endX - segment.startX) === 0) {
+                getGoodPoints(
+                    oppositePoint,
+                    point[0] + segment.segmentLength,
+                    point[1],
+                );
+                getGoodPoints(
+                    oppositePoint,
+                    point[0] - segment.segmentLength,
+                    point[1],
+                );
+                return;
+            }
+            for (let i = 1; i < 1200; i += 1) {
+                const currentY = y(i);
+                // drawPoint(i, currentY, 2);
+
+                const res = getDistancePoint([i, currentY], point);
+
+                if (Math.round(res) === Math.round(segment.segmentLength)) {
+                    if (oppositePoint) {
+                        getGoodPoints(oppositePoint, i, currentY);
+                    }
+                    // drawPoint(i, currentY, 5);
+                }
+            }
+
+            if (newDistance) {
+                globalCorrectPoint.push(correctPoint);
+            }
+
+            return y;
+        }
+
+        /**
+         * Поиск хороших точек для большого квадрата
+         */
+        function getGoodPoints(oppositePoint, i, currentY) {
+            _figureModel.forEach((currentSegment) => {
+                let goodPoint;
+                // const isFirstNeigbor = isSameSegments(neighborsSegment[0], {
+                //     startX: oppositePoint[0],
+                //     startY:oppositePoint[1],
+                //     endX: i,
+                //     endY: currentY
+                // })
+                // const isSecondNeigbor = isSameSegments(neighborsSegment[0], {
+                //     startX: oppositePoint[0],
+                //     startY:oppositePoint[1],
+                //     endX: i,
+                //     endY: currentY
+                // })
+                const isFirstNeigbor = isSameSegments(
+                    neighborsSegment.first,
+                    currentSegment,
+                );
+                const isSecondNeigbor = isSameSegments(
+                    neighborsSegment.second,
+                    currentSegment,
+                );
+                if (isFirstNeigbor || isSecondNeigbor) {
+                    return;
+                }
+                if (
+                    currentSegment.startX === 510 &&
+                    currentSegment.startY === 290
+                ) {
+                    console.log(1232);
+                }
+                if (
+                    (currentSegment.startX === i &&
+                        currentSegment.startY === currentY) ||
+                    (currentSegment.endX === i &&
+                        currentSegment.endY === currentY)
+                ) {
+                    goodPoint = [i, currentY];
+                } else {
+                    goodPoint = getIntersectionSegmentCoordinates(
+                        [currentSegment.startX, currentSegment.startY],
+                        [currentSegment.endX, currentSegment.endY],
+                        oppositePoint,
+                        [i, currentY],
+                    );
+                }
+                if (goodPoint && goodPoint.length) {
+                    controlPoint.push({
+                        goodPoint: goodPoint,
+                        segment: currentSegment,
+                    });
+                    // drawPoint(goodPoint[0], goodPoint[1], 5, true);
+                }
+            });
+        }
+
+        /**
+         * Принадлежит ли точка отрезку
+         */
+        function isPointBelongSegment(point, segment) {
+            const collinearMultiply =
+                (Math.round(point[0]) - segment.startX) *
+                    (segment.endY - segment.startY) -
+                (Math.round(point[1]) - segment.startY) *
+                    (segment.endX - segment.startX);
+            return (
+                Math.round(collinearMultiply) === 0 &&
+                ((segment.startX >= Math.round(point[0]) &&
+                    Math.round(point[0]) >= segment.endX) ||
+                    (segment.startX <= Math.round(point[0]) &&
+                        Math.round(point[0]) <= segment.endX))
+            );
+        }
+
+        /**
+         * Проверка: одинаковые ли сегменты
+         */
+        function isSameSegments(segment1, segment2) {
+            return (
+                (segment1.startX === segment2.startX &&
+                    segment1.startY === segment2.startY &&
+                    segment1.endX === segment2.endX &&
+                    segment1.endY === segment2.endY) ||
+                (segment1.startX === segment2.endX &&
+                    segment1.startY === segment2.endY &&
+                    segment1.endX === segment2.startX &&
+                    segment1.endY === segment2.startY)
+            );
+        }
+
+        /**
+         * Вычислить расстояние от точки до отрезка
+         */
+        function getDistanceToSegment(point, segment) {
+            const a = segment.endX - segment.startX;
+            const b = segment.endY - segment.startY;
+            const y =
+                (((a * a) / b) * segment.startY +
+                    a * (point[0] - segment.startX) +
+                    b * point[1]) /
+                ((a * a) / b + b);
+            const x = (a / b) * (y - segment.startY) + segment.startX;
+            return [x, y];
+        }
+
+        /**
+         * Создаем модель для фигуры, где для каждой стороны вычислены ее свойства
+         */
+        function createFigureModel() {
+            for (let i = 0; i <= _coordinates.length - 1; i++) {
+                const start = _coordinates[i];
+                const end =
+                    i === _coordinates.length - 1
+                        ? _coordinates[0]
+                        : _coordinates[i + 1];
+                const length = getLengthSegment(start, end);
+                _segmentsLenght.push(length);
+                _figureModel.push({
+                    startX: start[0],
+                    startY: start[1],
+                    endX: end[0],
+                    endY: end[1],
+                    segmentLength: length,
+                });
+            }
+        }
+
+        /**
+         * Расстояние между двумя точками
+         */
+        function getDistancePoint(pointOne, pointTwo) {
+            if (pointOne === undefined || pointTwo === undefined) {
+                console.log(123);
+            }
+            return Math.sqrt(
+                Math.pow(pointTwo[0] - pointOne[0], 2) +
+                    Math.pow(pointTwo[1] - pointOne[1], 2),
+            );
+        }
+
+        /**
+         * Найти длину отрезка по координатам 2ух точек
+         */
+        function getLengthSegment(start, end) {
+            return Math.sqrt(
+                Math.pow(end[0] - start[0], 2) + Math.pow(end[1] - start[1], 2),
+            );
+        }
+
+        /**
+         * Проверка на корректно нарисованный многоугольник
+         */
+        function checkBadPolygon(canvas) {
+            const convex = checkConvexPolygon(_coordinates);
+            const isIntersection = checkIntersectionInFigure(
+                _coordinates,
+                canvas,
+            );
+            if (!convex.isConvex || isIntersection) {
+                alert(
+                    `Неправильный многугольник
+                Пересечение: ${isIntersection}
+                Выпуклый: ${convex.isConvex}`,
+                );
+                location.reload();
+            }
+        }
+
+        /**
+         * Найти площадь фигуры
+         */
+        function getAreaOfFigure(coordinates) {
+            let sum = 0;
+            let sum2 = 0;
+            for (let i = 0; i < coordinates.length - 1; i++) {
+                sum += coordinates[i][0] * coordinates[i + 1][1];
+            }
+            sum += coordinates[coordinates.length - 1][0] * coordinates[0][1];
+            for (let i = 1; i < coordinates.length; i++) {
+                sum2 += coordinates[i][0] * coordinates[i - 1][1];
+            }
+            sum2 += coordinates[coordinates.length - 1][1] * coordinates[0][0];
+            return 0.5 * Math.abs(sum - sum2);
+        }
+
+        /**
+         * Рисуем координаты на канвасе
+         */
+        function drawCoordinate(event, canvas) {
+            canvas.lineWidth = 1;
+            canvas.strokeStyle = '#9308f0de';
+            canvas.lineTo(event.clientX, event.clientY);
+            canvas.fillText(
+                `${event.clientX} ${event.clientY}`,
+                event.clientX,
+                event.clientY,
+            );
+            canvas.fillRect(event.clientX, event.clientY, 5, 5);
+            canvas.stroke();
+        }
+
+        /**
+         * Проверка на то, что фигура дорисована
+         */
+        function isFigureFineshed(event) {
+            const errorX = Math.abs(event.clientX - startX);
+            const errorY = Math.abs(event.clientY - startY);
+            return errorX <= 5 && errorY <= 5 && startX >= 0 && startY >= 0;
+        }
+
+        function drawEnd(event, canvas) {
+            canvas.lineWidth = 1;
+            canvas.strokeStyle = 'blue';
+            canvas.lineTo(startX, startY);
+            canvas.stroke();
+        }
+
+        function checkConvexPolygon(coordinates) {
+            const arrayOfSign = {};
+            for (let i = 1; i < coordinates.length - 1; i++) {
+                const anglePoint = [coordinates[i][0], coordinates[i][1]];
+                const backPoints = {
+                    x: coordinates[i][0] - coordinates[i - 1][0],
+                    y: coordinates[i][1] - coordinates[i - 1][1],
+                };
+                const forwardPoints = {
+                    x: coordinates[i + 1][0] - coordinates[i][0],
+                    y: coordinates[i + 1][1] - coordinates[i][1],
+                };
+                arrayOfSign[anglePoint] =
+                    backPoints.x * forwardPoints.y -
+                    backPoints.y * forwardPoints.x;
+            }
+            appendFirstAngle(coordinates, arrayOfSign);
+            appendEndAngle(coordinates, arrayOfSign);
+            // checkPolygonOrientation(coordinates);
+            const arrayOfSignCheck = Object.values(arrayOfSign).filter(
+                (element) => element > 0,
+            );
+            const wrongAngles = Object.keys(arrayOfSign).filter((element) => {
+                if (arrayOfSign[element] < 0) {
+                    return element;
+                }
+            });
+
+            return {
+                isConvex:
+                    !arrayOfSignCheck.length ||
+                    arrayOfSignCheck.length ===
+                        Object.values(arrayOfSign).length,
+                coordWrongAngles: wrongAngles,
+            };
+        }
+
+        //проверить сторону обхода мн-ка
+        function checkPolygonOrientation(coordinates) {
+            let smallerXCoordinate = 600;
+            let smallerXCoordinates = [];
+            coordinates.forEach((coordinate) => {
+                if (coordinate[0] < smallerXCoordinate) {
+                    smallerXCoordinates = coordinate;
+                    smallerXCoordinate = coordinate[0];
+                }
+            });
+            const smallerXIndex = findIndex(
+                coordinates,
+                smallerXCoordinates[0],
+                smallerXCoordinates[1],
+            );
+            let backIndex,
+                forwardIndex = 0;
+            if (smallerXIndex === 0) {
+                backIndex = coordinates.length - 1;
+                forwardIndex = smallerXIndex + 1;
+            } else if (smallerXIndex === coordinates.length - 1) {
+                backIndex = coordinates.length - 2;
+                forwardIndex = 0;
+            } else {
+                backIndex = smallerXIndex - 1;
+                forwardIndex = smallerXIndex + 1;
+            }
+            const backVector = {
+                x: coordinates[smallerXIndex][0] - coordinates[backIndex][0],
+                y: coordinates[smallerXIndex][1] - coordinates[backIndex][1],
+            };
+            const forwardVector = {
+                x: coordinates[forwardIndex][0] - coordinates[smallerXIndex][0],
+                y: coordinates[forwardIndex][1] - coordinates[smallerXIndex][1],
+            };
+            const anglePoint =
+                backVector.x * forwardVector.y - backVector.y * forwardVector.x;
+            if (anglePoint >= 0) {
+                console.log('По часовой');
+            } else {
+                console.log('Против часовой');
+            }
+        }
+
+        // вектроное произведение
+        function getVectorComplexety(top, mid, bot) {
+            const backVector = {
+                x: mid[0] - bot[0],
+                y: mid[1] - bot[1],
+            };
+            const forwardVector = {
+                x: top[0] - mid[0],
+                y: top[1] - mid[1],
+            };
+            const anglePoint =
+                backVector.x * forwardVector.y - backVector.y * forwardVector.x;
+            return anglePoint;
+        }
+
+        function appendEndAngle(coordinates, arrayOfSign) {
+            const anglePoint = [
+                coordinates[coordinates.length - 1][0],
+                coordinates[coordinates.length - 1][1],
+            ];
+            const backPointsEnd = {
+                x:
+                    coordinates[coordinates.length - 1][0] -
+                    coordinates[coordinates.length - 2][0],
+                y:
+                    coordinates[coordinates.length - 1][1] -
+                    coordinates[coordinates.length - 2][1],
+            };
+            const forwardPointsEnd = {
+                x: coordinates[0][0] - coordinates[coordinates.length - 1][0],
+                y: coordinates[0][1] - coordinates[coordinates.length - 1][1],
+            };
+            arrayOfSign[anglePoint] =
+                backPointsEnd.x * forwardPointsEnd.y -
+                backPointsEnd.y * forwardPointsEnd.x;
+        }
+
+        function appendFirstAngle(coordinates, arrayOfSign) {
+            const anglePoint = [coordinates[0][0], coordinates[0][1]];
+            const backPoints = {
+                x: coordinates[0][0] - coordinates[coordinates.length - 1][0],
+                y: coordinates[0][1] - coordinates[coordinates.length - 1][1],
+            };
+            const forwardPoints = {
+                x: coordinates[1][0] - coordinates[0][0],
+                y: coordinates[1][1] - coordinates[0][1],
+            };
+            arrayOfSign[anglePoint] =
+                backPoints.x * forwardPoints.y - backPoints.y * forwardPoints.x;
+        }
+        //найти индекс
+        function findIndex(coordinates, x, y) {
+            for (let i = 0; i < coordinates.length; i++) {
+                if (x === coordinates[i][0] && y === coordinates[i][1]) {
+                    return i;
+                }
+            }
+        }
+
+        function checkIntersectionInFigure(coordinate, canvas) {
+            for (let i = 0; i < _coordinates.length - 1; i++) {
+                for (let j = 1; j < _coordinates.length - 1; j++) {
+                    if (
+                        checkIntersectionLine(
+                            _coordinates[i],
+                            _coordinates[i + 1],
+                            _coordinates[j],
+                            _coordinates[j + 1],
+                        )
+                    ) {
+                        return true;
+                    }
+                }
+                if (
+                    checkIntersectionLine(
+                        _coordinates[i],
+                        _coordinates[i + 1],
+                        _coordinates[_coordinates.length - 1],
+                        _coordinates[0],
+                    )
+                ) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        function checkIntersectionLine(
+            startFirst,
+            endFirst,
+            startSecond,
+            endSecond,
+        ) {
+            let midle,
+                x1,
+                x2,
+                x3,
+                x4,
+                y1,
+                y2,
+                y3,
+                y4 = 0;
+            let change1,
+                change2 = false;
+            x1 = startFirst[0];
+            x2 = endFirst[0];
+            x3 = startSecond[0];
+            x4 = endSecond[0];
+            y1 = startFirst[1];
+            y2 = endFirst[1];
+            y3 = startSecond[1];
+            y4 = endSecond[1];
+            if (x1 === x3 && y1 === y3) return false;
+            if (x2 === x4 && y2 === y4) return false;
+            if (x2 === x3 && y2 === y3) return false;
+            if (x1 === x4 && y1 === y4) return false;
+
+            const v1 = (x4 - x3) * (y1 - y3) - (y4 - y3) * (x1 - x3);
+            const v2 = (x4 - x3) * (y2 - y3) - (y4 - y3) * (x2 - x3);
+            const v3 = (x2 - x1) * (y3 - y1) - (y2 - y1) * (x3 - x1);
+            const v4 = (x2 - x1) * (y4 - y1) - (y2 - y1) * (x4 - x1);
+            const result = v1 * v2 < 0 && v3 * v4 < 0;
+            return result;
+        }
+    </script>
+</html>
